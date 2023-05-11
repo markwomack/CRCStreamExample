@@ -9,63 +9,21 @@
 // Arduino includes
 #include <Stream.h>
 
-// Local includes
-extern "C" {
-  #include "crc32.h"
-}
-
 class CRCStream : public Stream {
   public:
-    CRCStream(Stream* stream, uint32_t expectedSize, uint32_t expectedCRC) {
-      _stream = stream;
-      _expectedSize = expectedSize;
-      _expectedCRC = expectedCRC;
-      _currentSize = 0;
-      _currentCRC = 0;
-    };
+    CRCStream(Stream* stream, uint32_t expectedSize, uint32_t expectedCRC);
 
-    int available() {
-      return _stream->available();
-    };
+    // Need to be implemented for Stream interface
+    int available();
+    int read();
+    int peek();
+    size_t write(uint8_t b);
     
-    int read() {
-      int data = _stream->read();
-      
-      if (data != -1) {
-        crc32((uint8_t*)&data, 1, &_currentCRC);
-        _currentSize++;
-      }
-      
-      return data;
-    };
-    
-    int peek() {
-      return _stream->peek();
-    };
-
-    size_t write(uint8_t b) {
-      return _stream->write(b);
-    };
-    
-    bool sizeAndCRCMatch() {
-      return (_expectedSize == _currentSize) && (_expectedCRC == _currentCRC);
-    };
-
-    uint32_t getExpectedSize() {
-      return _expectedSize;
-    };
-
-    uint32_t getCurrentSize() {
-      return _currentSize;
-    };
-
-    uint32_t getExpectedCRC() {
-      return _expectedCRC;
-    };
-
-    uint32_t getCurrentCRC() {
-      return _currentCRC;
-    };
+    bool sizeAndCRCMatch();
+    uint32_t getExpectedSize();
+    uint32_t getCurrentSize();
+    uint32_t getExpectedCRC();
+    uint32_t getCurrentCRC();
     
   private:
     Stream* _stream;
@@ -73,5 +31,8 @@ class CRCStream : public Stream {
     uint32_t _currentSize;
     uint32_t _expectedCRC;
     uint32_t _currentCRC;
+
+    uint32_t crc32_for_byte(uint32_t r);
+    void crc32(const void *data, size_t n_bytes, uint32_t* crc);
 };
 #endif // CRCSTREAM_H
